@@ -346,7 +346,7 @@
         const categoryTitle = document.querySelector('.body-category-running-category');
         const timerSpan = document.querySelector('.body-timer-span');
         categoryTitle.innerHTML = pickedCategory;
-        let secondsLeft = 3;
+        let secondsLeft = 60;
         timerSpan.textContent = '01:00';
         let timerInterval = setInterval(() => {
             secondsLeft--;
