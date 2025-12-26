@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+
+        body {
+            height: 100vh;
+            margin: 0;
+        }
+        .hide {
+            display: none !important;
+            height: 100%;
+        }
+
+        .main_container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main_header {
+            display: flex;
+            padding: 15px;
+            justify-content: space-between;
+            font-size: 26px;
+        }
+
+        .main_body {
+            height: fit-content;
+        }
+
+        .body-category-pick {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .body-category-pick-content {
+            display: flex;
+            padding: 50px;
+            gap: 50px;
+            justify-content: center;
+        }
+
+        .body-category-pick-content span {
+            font-size: 40px;
+        }
+
+        .body-category-pick-content > div {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+        }
+
+        .body-category-pick-or {
+            font-size: 20px !important;
+            align-self: center;
+        }
+
+        .body-category-prepared,
+        .body-running,
+        .body-finished {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 50px;
+        }
+
+        .body-timer-span {
+            font-size: 100px;
+        }
+
+    </style>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+<div class="main_container">
+    <div class="main_header">
+        <span class="header-name-round">Совпадение</span>
+        <div>
+            <span class="header-type-round"></span>:
+            <span class="header-state-round"></span>
+        </div>
+        <div class="header-title-round">Раунд:
+            <span class="header-current-round"></span>
+            <span class="header-span-round"> из </span>
+            <span class="header-all-round"></span>
+        </div>
+    </div>
+    <div class="main_body">
+        <div class="body-category-pick">
+            <div class="body-category-pick-content">
+                <div class="body-category-pick-left">
+                    <span>Города</span>
+                    <button class="body-category-pick-left-button">Выбрать</button>
+                </div>
+                <span class="body-category-pick-or">или</span>
+                <div class="body-category-pick-right">
+                    <span>Колесо</span>
+                    <button class="body-category-pick-right-button">Выбрать</button>
+                </div>
+            </div>
+            <button class="body-category-pick-reroll">Перегенерить</button>
+        </div>
+        <div class="body-category-prepared">
+            <span>Выбранная категория:</span>
+            <b><span class="body-category-prepared-category"></span></b>
+            <button class="body-category-prepared-start">Начать раунд</button>
+        </div>
+        <div class="body-running">
+            <span>Выбранная категория:</span>
+            <b><span class="body-category-running-category"></span></b>
+            <span>Оставшееся время:</span>
+            <b><span class="body-timer-span">01:00</span></b>
+        </div>
+        <div class="body-finished">
+            <span>Выбранная категория:</span>
+            <b><span class="body-category-finished-category"></span></b>
+            <span>Раунд окончен! Идет подсчет очков</span>
+            <button class="body-finished-new">Начать следующий раунд</button>
+            <button class="body-finished-restart">Начать новую игру</button>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    let currentRound = 1;
+    let maxRound = 6;
+
+    let currentState = 1;
+    let stateNames = {
+        1: 'Выбор категории',
+        2: 'Готовность к раунду',
+        3: 'Пишем ассоциации',
+        4: 'Подсчет очков',
+    }
+
+    const roundSequence = [1, 2, 3, 1, 2, 3];
+    const roundTypesNames = {
+        1: 'Совы',
+        2: 'Жаворонки',
+        3: 'Блиц'
+    }
+
+    const sameRounds = [
+        ['Кухня', 'Центр города'],
+        ['Япония', 'Цирк'],
+        ['Обитатели зоопарка', 'Школа'],
+        ['Содержимое женской сумочки', 'Ванная комната'],
+        ['Аптека', 'Кошки'],
+        ['Кольцо', 'Супермаркет'],
+        ['Париж', 'Российские фильмы'],
+        ['Нью-Йорк', 'Средневековье'],
+        ['Санкт-Петербург', '1990-е годы'],
+        ['Театр', 'Москва'],
+        ['Джунги', 'Австралия'],
+        ['Российские актеры', 'Сибирь'],
+        ['Завтрак', 'Комедийные фильмы'],
+        ['Выпечка', 'Сокровища'],
+        ['Клетки', 'Лондон'],
+        ['Зарубежные писатели', 'Известные спортсмены'],
+        ['Фильмы-боевики', 'Телепередачи'],
+        ['Персонажи мультфильмов', 'Зарубежные актеры'],
+        ['Древний рим', 'Химические элементы'],
+        ['Вечеринка', 'Сыр'],
+        ['Новый год', 'Произведения русских писателей'],
+        ['Вампиры', 'Емкости'],
+        ['Сила', 'Анатомия'],
+        ['Поход', 'Почта'],
+        ['Университет', 'Завод'],
+        ['Опасные профессии', 'Известные картины'],
+        ['Ключи', 'Настольные игры'],
+        ['Весна', 'Привидения'],
+        ['Роботы', 'Осень'],
+        ['Рыцари', 'Круглые предметы'],
+        ['Погода', 'Известные политики'],
+        ['Корабль', 'Космос'],
+        ['Пляж', 'Поезд'],
+        ['Компьютер', 'Ведьмы'],
+        ['Дикий запад', 'Пираты'],
+        ['Российские музыкальные группы', 'Короли'],
+    ]
+
+    const differRounds = [
+        ['Деревья', 'Виды спорта'],
+        ['Герои и Боги Древней Греции', 'Марки автомобилей'],
+        ['Грибы', 'Школьные предметы'],
+        ['Рыбы', 'Электрические приборы'],
+        ['Копытные животные', 'Инструменты для строительства и ремонта'],
+        ['Породы собак', 'Существительные, заканчивающиеся на "-ай"'],
+        ['Острова', 'Существительные, заканчивающиеся на "-аль"'],
+        ['Реки', 'Радиостанции'],
+        ['Города России', 'Танцы'],
+        ['Государства Африки', 'Блюда восточной кухни'],
+        ['Денежные единицы', 'Супергерои'],
+        ['Напитки', 'Архитектурные сооружения'],
+        ['Фрукты', 'Насекомые'],
+        ['Кондитерские изделия', 'Грызуны'],
+        ['Названия конфет и шоколада', 'Мифические существа'],
+        ['Злодеи из мультфильмов', 'Композиторы'],
+        ['Поэты', 'Цветы'],
+        ['Режиссеры', 'Птицы'],
+        ['Ученые', 'Государства Азии'],
+        ['Телеканалы', 'Овощи'],
+        ['Футбольные клубы', 'Ягоды'],
+        ['Предметы интерьера', 'Штаты США'],
+        ['Созвездия', 'Государства Европы'],
+        ['Канцелярские принадлежности', 'Мясные блюда'],
+        ['Спортивный инвентарь', 'Специальности врачей'],
+        ['Российские музыкальные исполнители', 'Телеведущие'],
+        ['Музыкальные инструменты', 'Детские мультсериалы'],
+        ['Марки бытовой техники', 'Русские писатели'],
+        ['Существительные, заканчивающиеся на "-иль"', 'Художники'],
+        ['Комедийные сериалы', 'Президенты'],
+        ['Фильмы и сериалы про войну', 'Металлы и сплавы'],
+        ['Детективные фильмы и сериалы', 'Единицы изменения'],
+        ['Фильмы и сериалы про космос', 'Предметы одежды'],
+        ['Сказки', 'Транспортные средства'],
+        ['Книги, в названии которых есть числительное', 'Фильмы и мультфильмы, в названии которых есть цвет'],
+        ['Мультфильмы, в названии которых есть имя', 'Животные-герои фильмов или сериалов']
+
+    ]
+
+    const quickRounds = [
+        [['Мексика', 'Кинозлодей', 'Хищник', 'Иностранный университет', 'Бутерброд', 'Теория...'], ['Каша', 'Посуда', 'Русский художник', 'Изобретение XX века', 'Цвет глаз', 'Улица']],
+        [['Известная Елена', 'Квентин Тарантино', 'Фехтование', 'Пещерный человек', 'Пустыня', 'Чудо света'], ['Куба', 'Футбол', 'Варенье', 'Писатель-фантаст', 'Верхняя одежда', 'Жук',]],
+        [['Хобби', 'Сувенир', 'Исландия', 'Марка телефона', 'Слово, заканчивающееся на "лин"', 'Киносага',], ['Экстренная служба', 'Природное явление', 'Европейская столица', 'Рифма к слову "дуб"', 'Хищная птица', 'Мост']],
+        [['Сосуд', 'Косметика', 'Музыкальный жанр', 'Бытовая техника', 'Строительная профессия', 'Стиль плавания',], ['Газета', 'Известный кот', 'Слово, начинающееся на "комб', 'Зарубежный режиссер', 'Минеральная вода', 'Марка чая',]],
+        [['Тембр голоса', 'Скандинавия', 'Гостиница', 'Фруктовый сок', 'Произведение Чехова', 'Имя птицы из мультфильма',], ['Физик', 'Рок-Н-Ролл', 'Аттракцион', 'Известный Михаил', 'Ювелирное украшение', 'Баскетбол',]],
+        [['Винт', 'Комнатное растение', 'Фауна тропиков', 'Леонадо Ди Каприо', 'Кость', 'Часы',], ['Эмоция', 'Финляндия', 'Спортивный комментатор', 'Драгоценный камень', 'Марка самолета', 'Брэд Питт',]],
+        [['Шотландия', 'Образование', 'Морское млекопитающее', 'Песня группы "Кино"', 'Военный корабль', 'Зарубежный политик',], ['Петр I', 'Животное Африки', 'Народная песня', 'Книга с женским именем в названии', 'Шахматная фигура', 'Отдел в продуктовом магазине',]],
+        [['Испания', 'Метательное оружие', 'Киностудия', 'Культурное растение', 'Начинка для пиццы', 'Муза',], ['Теннис', 'Рюкзак путешественника', 'Горная цепь', 'Славянское божество', 'Средство от простуды', 'Политический режим',]],
+        [['Топтиво', 'Архитектурный стиль', 'Книга с мужским именем в названии', 'Инструмент в оркестре', 'Полководец', 'Соревнование',], ['Праздник', 'Команда собаке', 'Родственник', 'Иностранный футбольный клуб', 'Известная Мария', 'Журнал',]],
+    ]
+
+    const categoriesByType = {
+        1: sameRounds,
+        2: differRounds,
+        3: quickRounds
+    }
+
+    let pickedCategories = [];
+    let pickedCategory = '';
+
+
+    const headerCurrentCount = document.querySelector('.header-current-round');
+    const headerMaxCount = document.querySelector('.header-all-round');
+    const headerTypeRound = document.querySelector('.header-type-round');
+    const headerStateRound = document.querySelector('.header-state-round');
+
+    const bodyPickingCategory = document.querySelector('.body-category-pick');
+    const bodyCategoryPrepared = document.querySelector('.body-category-prepared');
+    const bodyRunning = document.querySelector('.body-running');
+    const bodyFinished = document.querySelector('.body-finished');
+
+    const blockElements = [
+        bodyPickingCategory,
+        bodyCategoryPrepared,
+        bodyRunning,
+        bodyFinished
+    ]
+
+    const showHideBlock = (el, needToShow) => {
+        el.classList.toggle('hide', !needToShow);
+    }
+    const initHeaders = () => {
+        headerCurrentCount.textContent = currentRound;
+        headerMaxCount.textContent = maxRound;
+        headerTypeRound.textContent = roundTypesNames[roundSequence[currentRound - 1]];
+        headerStateRound.textContent = stateNames[currentState];
+    }
+
+    const hideBlockExcept = (el) => {
+        blockElements.forEach(block => {
+            if (block === el) {
+                showHideBlock(block, true);
+            } else {
+                showHideBlock(block, false);
+            }
+        })
+    }
+
+    const initPickingCategory = () => {
+        hideBlockExcept(bodyPickingCategory);
+        const rerollButton = document.querySelector('.body-category-pick-reroll');
+        const leftCategorySpan = document.querySelector('.body-category-pick-left span');
+        const rightCategorySpan = document.querySelector('.body-category-pick-right span');
+        const leftButton = document.querySelector('.body-category-pick-left-button');
+        const rightButton = document.querySelector('.body-category-pick-right-button');
+        const pickCategories = () => {
+            const currentType = roundSequence[currentRound - 1];
+            const categories = categoriesByType[currentType];
+            pickedCategories = categories[Math.floor(Math.random()*categories.length)];
+            if (currentType === 3) {
+                leftCategorySpan.innerHTML = pickedCategories[0].join('<br>');
+                rightCategorySpan.innerHTML = pickedCategories[1].join('<br>');
+            } else {
+                leftCategorySpan.textContent = pickedCategories[0];
+                rightCategorySpan.textContent = pickedCategories[1];
+            }
+        }
+
+        const selectCategory = (categoryIndex) => {
+            if (roundSequence[currentRound - 1] === 3) {
+                pickedCategory = pickedCategories[categoryIndex].join('<br>');
+            } else {
+                pickedCategory = pickedCategories[categoryIndex];
+            }
+            currentState = 2;
+            initGame();
+        }
+        pickCategories();
+        rerollButton.onclick = () => {
+            pickCategories();
+        }
+        leftButton.onclick = () => {
+            selectCategory(0);
+        }
+        rightButton.onclick = () => {
+            selectCategory(1);
+        }
+
+    }
+
+    const initPrepareCategory = () => {
+        hideBlockExcept(bodyCategoryPrepared);
+        const categoryTitle = document.querySelector('.body-category-prepared-category');
+        const startButton = document.querySelector('.body-category-prepared-start');
+        categoryTitle.innerHTML = pickedCategory;
+        startButton.onclick = () => {
+            currentState = 3;
+            initGame();
+        }
+
+    }
+
+    const initRunningCategory = () => {
+        hideBlockExcept(bodyRunning);
+        const categoryTitle = document.querySelector('.body-category-running-category');
+        const timerSpan = document.querySelector('.body-timer-span');
+        categoryTitle.innerHTML = pickedCategory;
+        let secondsLeft = 3;
+        timerSpan.textContent = '01:00';
+        let timerInterval = setInterval(() => {
+            secondsLeft--;
+            timerSpan.textContent = '00:' + (secondsLeft < 10 ? ('0' + secondsLeft) : secondsLeft);
+            if (secondsLeft === 0) {
+                clearInterval(timerInterval);
+                currentState = 4;
+                initGame();
+            }
+        }, 1000);
+    }
+
+    const initFinishedCategory = () => {
+        hideBlockExcept(bodyFinished);
+        const categoryTitle = document.querySelector('.body-category-finished-category');
+        const newRoundButton = document.querySelector('.body-finished-new');
+        const newGameButton = document.querySelector('.body-finished-restart');
+        categoryTitle.innerHTML = pickedCategory;
+        newRoundButton.classList.toggle('hide', currentRound === maxRound);
+        newGameButton.classList.toggle('hide', currentRound !== maxRound);
+
+        newRoundButton.onclick = () => {
+            currentState = 1;
+            currentRound = currentRound + 1;
+            initGame();
+        }
+
+        newGameButton.onclick = () => {
+            currentState = 1;
+            currentRound = 1;
+            initGame();
+        }
+
+    }
+
+    let stateFunctions = {
+        1: initPickingCategory,
+        2: initPrepareCategory,
+        3: initRunningCategory,
+        4: initFinishedCategory,
+    }
+
+    const initRoundState = () => {
+        stateFunctions[currentState]();
+    }
+    const initGame = () => {
+        initHeaders();
+        initRoundState();
+    }
+
+    initGame();
+
+
+</script>
+</html>
